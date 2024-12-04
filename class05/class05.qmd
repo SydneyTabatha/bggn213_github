@@ -1,0 +1,164 @@
+---
+title: "Class 5: Data viz with"
+author: "Sydney (PID: A69036053)"
+format: pdf
+---
+# html#change to pdf, save, render
+
+R has lots of ways to make figures and graphs in particular. One that comes with R out of the box is called **"base" R** - the `plot()` function. 
+```{r}
+plot(cars) # first column on x axis
+```
+
+
+A very popular package in this area is called **ggplot2**
+```{r}
+#/ echo: true
+# same thing I don't want in my doc
+```
+
+Before i can use any add-on package like this I must install it with the `install.packages("ggplot2")` command/function. Install packages in the consol via install.packages("").
+
+Then to use the package I need to load it with a `library(ggplot2 # or whatever the name of the package is)` call.
+
+```{r}
+library(ggplot2)
+
+ggplot(cars) + 
+  aes(x=speed, y=dist) +
+  geom_point()
+```
+
+Code is more concise for base r graphs. ggplot is not worth it unless the graphs are more complicated. If you are just looking at data, use base r plots. 
+
+Let's fit a model and show it on my plot: 
+
+```{r}
+ggplot(cars) + 
+  aes(x=speed, y=dist) +
+  geom_point() + 
+  geom_smooth()
+
+ggsave("myplot.png") # save the graph as a png file
+# or 
+ggsave("myplot.pdf")
+```
+
+Every ggplot has at least 3 layers
+- layer1 - **data** (data.frame with the data you want to plot)
+- layer2 - the **aes**thetics (mapping of your data columns from your data frame to your plot)
+- layer 3 - **geoms**: `geom_point()`, `geom_line()`, `geom_col()`
+set up aesthetics before you do the geometries because it plots it in the order on the code, one on top of eachother
+(there are tones of these, the basics are points, lines and columns)
+```{r}
+head(mtcars)
+```
+
+Make me a ggplot of the `mtcars` data set using `mpg` vs `disp` and set the size of the points to the `hp`. 
+```{r}
+#library(ggrepel) # still need to install
+ggplot(mtcars) + 
+  aes(x=mpg, y=disp, size=hp, col=am,labels=rownames(mtcars)) + # if color is not in the data, don't put it here
+  geom_point( col="blue")  # put color here
+  #facet_wrap(~am) + # make subplots based on some faset of your data like am (faciting - separating panels by _)
+  #geom_text_repel()
+
+
+```
+Now color all points blue
+
+```{r}
+rownames(mtcars)
+```
+
+
+
+
+
+
+# GENE EXPRESSION PLOT
+
+# Adding more plot aesthetics through aes() 
+```{r}
+url <- "https://bioboot.github.io/bimm143_S20/class-material/up_down_expression.txt"
+genes <- read.delim(url)
+head(genes)
+```
+
+```{r}
+nrow(genes)
+colnames(genes)
+ncol(genes)
+table(genes$State)
+round( table(genes$State)/nrow(genes) * 100, 2 ) # 2 significant figures
+
+#unique(genes$State) tells you the unique ones
+```
+The `table()` function is super useful to tell how many entries of each type there are. 
+nrow(genes) gives the total number of genes.
+# code for the ggplot 
+```{r}
+ggplot(genes)+
+aes(x=Condition1, y=Condition2)+
+geom_point()
+```
+
+There are `r nrow(genes)` genes in this dataset. 
+The functions `nrow()`, `ncol()` and `table()` are important. 
+```{r}
+p <- ggplot(genes) + 
+    aes(x=Condition1, y=Condition2, col=State) +
+    geom_point()
+p
+```
+
+
+```{r}
+p + scale_colour_manual( values=c("blue","gray","red") )
+```
+
+```{r}
+# add plot annotations to the p object with the labs() function 
+# add x and y labels
+p+ scale_colour_manual(values=c("blue", "gray", "red"))+
+  labs(title='Gene Expression Changes Upon Drug Treatment', x="Control", y="Drug Treatment")
+```
+- saving plots with **ggsave()**
+- different plot types with different **geomes()** 
+- faceting with **facet_wrap()**
+- multiplot layout with the **patchwork** package
+
+# 7 Going Further
+
+
+
+
+
+
+
+
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r title of chunk}
+1 + 1
+```
+```{r}
+plot(1:50)
+```
+
+You can add options to executable code like this 
+
+```{r}
+#| echo: false # only output is discplayed - no code
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
+
