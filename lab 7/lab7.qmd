@@ -1,0 +1,190 @@
+---
+title: "lab 7 Sydney Ackermann PID: A69036053"
+format: pdf
+editor: visual
+---
+
+Machine learning 
+k clustering
+
+Before we get into clustering methods, let's make some sample data to cluster where we know what the answer should be. 
+
+To help with this I will use the `rnorm()` function
+```{r}
+
+hist(rnorm(150000, mean=c(-3,3)))
+
+```
+
+```{r}
+n=10000
+hist(c(rnorm(n,mean=3), rnorm(n, mean=-3)))
+
+```
+
+```{r}
+n=30
+x<-(c(rnorm(n,mean=3), rnorm(n, mean=-3)))
+#x
+y<-(c(rnorm(n,mean=-3), rnorm(n, mean=3))) # rev(x)
+#y
+z<-cbind(x,y) # combine the vectors column bind (row bind would combine them row wise)
+z
+
+```
+
+
+```{r}
+plot(z)
+```
+k-means clustering
+
+The function in base R for k-clustering is called `kmeans()`. 
+
+```{r}
+km <- kmeans(z, centers=2)
+#n=30 so its telling us there are 30 points in each group
+# clustering vector is like a membership vector - tells us which cluster each point is closest to
+km
+```
+Q: print out the cluster membership vector
+
+```{r}
+km$cluster
+```
+Plot with clustering result
+```{r}
+
+#plot(z, col= 1)
+#plot(z, col= c("red", "blue"))
+#plot(z, col= c(1,2))
+# set color equal to the cluster membership vector:
+plot(z, col= km$cluster)
+```
+
+```{r}
+plot(z, col= km$cluster) 
+points(km$centers, col="blue", pch=15, cex=2) # cex makes point bigger if larger than 1, pch makes it thicker
+
+# in ggplot you have to add layers. here it just does it automatically 
+
+# always have to specify number of clusters
+```
+Q: Can you cluster our data in `z` into four clusters please?
+
+```{r}
+km4 <- kmeans(z, centers=4)
+plot(z, col= km4$cluster) 
+points(km4$centers, col="blue", pch=15, cex=2) 
+
+# This is stochastic so it will be different every time
+# kmeans will impose a structure (clustering) on your data even if its not there because you specify how many clusters you want - self fulfilling prophicy
+```
+
+Hierarchical clustering 
+The main function to do hierarchical clustering in base R is called `hclust()`. 
+
+Unlike `kmeans()`. I can not just pass in my data as input, I first need a distance matrix (distance between each points (60x60 and zeros down the diagonal)).
+```{r}
+d<-dist(z) # make the distance matrix
+hc<- hclust(d)
+hc
+# bottom up - start with 60 clusters and then merge them untill we've stuck everything into one cluster - shows us the merging 
+# or top down clustering 
+```
+
+There is a specific hclust plot() method...
+
+```{r}
+plot(hc)
+```
+
+```{r}
+plot(hc)
+abline(h=10, col="red") # adds line where the cluster number shows because the distance between points is the largest
+```
+To get my clustering result (i.e., membership vector). I can "cut" my tree at a given height. To do this I will use the `cutree()`
+
+```{r}
+grps<- cutree(hc, h=10) # this is our new vector of hierarchial clustering results
+grps
+
+```
+
+Principle component analysis (PCA)
+
+Principal component analysis (PCA) is a well established "multivariate statistical technique" used to reduce the dimensionality of a complex data set to a more manageable number (typically 2D or 3D). This method is particularly useful for highlighting strong paterns and relationships in large datasets (i.e. revealing major similarities and diferences) that are otherwise hard to visualize. As we will see again and again in this course PCA is often used to make all sorts of bioinformatics data easy to explore and visualize.
+
+```{r}
+url <- "https://tinyurl.com/UK-foods"
+x <- read.csv(url, row.names=1) # make the columns the row names with =1
+dim(x)
+#View(x) always comment it unless you are looking at it
+
+head(x)
+
+barplot(as.matrix(x), beside=T, col=rainbow(nrow(x)))
+
+pairs(x, col=rainbow(10), pch=16)
+```
+
+PCA to the rescue
+
+The main function to do PCA in base R is called `prcomp()`. 
+
+Note thatt I need to take the transpose of this particular data as that is what the `precomp()` help page was asking for. 
+
+```{r}
+x
+# want to switch colummns and rowes so its accepted into PCA
+
+t(x) # transpose
+
+pca<- prcomp(t(x))
+summary(pca) # pc1 captures 67% of the variation in the data. pc2 captures 29% of the data
+# (67+29=96, therefore, )96% of the varience was captured in 2 dimensions
+```
+
+Lets see what is inside our result object `pca` that we just calculated:
+
+```{r}
+attributes(pca)
+```
+
+```{r}
+pca$x
+```
+
+To make our main result figure, called a "PC plot" (or "score plot" or "coordination plot" or "PC1 vs PC2 plot"). 
+
+
+```{r}
+plot(pca$x[,1], pca$x[,2], col=c("black", "red", "blue", "darkgreen"), pch=16, xlab="PC1 (67.4%)", ylab="PC2 (29%)") # get the first column and the second column and plot the first column against the second (pca1 vs pca2) 
+# pch fills in the dots
+
+abline(h=0) # average
+abline(v=0)
+
+
+```
+From here we can see that Ireland is off on it's own. The major axis of variance. Give more weight to PC1 because it captures more of the variance. If two points are far apart on PC1 then thats saying there is a major feature in this data. ireland is the main difference. 
+
+
+Variable loadings plot 
+
+Can give us insight on how the original variables (the foods) contribute to our new PC axis 
+
+```{r}
+## Lets focus on PC1 as it accounts for > 90% of variance 
+par(mar=c(10, 3, 0.35, 0))
+barplot( pca$rotation[,1], las=2 )
+
+# PC1 -> COMPARING TWO COUNTRIES
+```
+```{r}
+pca$rotations
+
+
+```
+
+

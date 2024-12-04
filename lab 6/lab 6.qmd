@@ -1,0 +1,17 @@
+---
+title: "lab 6"
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+```{r}
+add -> function(x,y){
+  x+y
+  
+}
+``
+add(3,4)
+
+```

@@ -1,0 +1,323 @@
+---
+title: "lab8, Sydney Ackermann PID  A69036053"
+format: pdf
+editor: visual
+---
+
+
+```{r}
+head(mtcars)
+```
+Let's look at the average mean value of every column.:
+```{r}
+apply(mtcars, 2, mean) # 2 for col, 1 for rows
+# says average mpg is 20
+
+
+```
+Now lets look at spread in each of these columns. each car (row) is a dimension of the data set. 
+
+Let's look at the spread via `sd()`.
+
+```{r}
+apply(mtcars, 2, sd)
+```
+
+Lets do a pca on it
+
+```{r}
+pca <- prcomp(mtcars)
+biplot(pca)
+```
+Here the problem is that the columns are measured in different units. 
+Lets try scaling the data. what is it?
+```{r}
+mtscale <- scale(mtcars) 
+head(mtscale) # now they are in the same units
+```
+What is the mean of each dimension/column in mtscale? 
+```{r}
+round(apply(mtscale, 2, mean), 3) # round to 3 sig figs
+
+#scaling finds the mean center - find the mean of all the data and subtract it from zero
+```
+```{r}
+round(apply(mtscale, 2, sd), 3)
+```
+Let's plot `mpg` vs `disp` for both mtcars and the scaled version of it (mtscale).
+```{r}
+library(ggplot2)
+
+ggplot(mtcars) +
+  aes(mpg, disp) +
+  geom_point()
+```
+```{r}
+ggplot(mtscale) +
+  aes(mpg, disp) +
+  geom_point()
+```
+The only difference is that it is centerd at zero. doesnt change the relationships between the data - it just scales it. 
+
+```{r}
+pca2 <- prcomp(mtscale)
+biplot(pca2)
+```
+More fair representation of all the cars because its not being dominated by different units. 
+
+
+
+##Breast Cancer FNA data
+# were going to do PCA/clustering on this data
+
+```{r}
+# first step is to download the csv file and save it in the same directory as your script
+fna.data <- "WisconsinCancer.csv"
+wisc.df <- read.csv(fna.data, row.names=1) # what does row.names=1 mean? You set the row names to be the id's - the first column
+head(wisc.df)
+```
+Remove the first column from the data set 
+
+Q1. How many rows/patients/subjust.
+
+```{r}
+nrow(wisc.df)
+```
+How many malignants are there? "M"
+```{r}
+table(wisc.df$diagnosis)
+```
+
+
+
+Get rid of diagnosis column
+```{r}
+wisc.data <- wisc.df[,-1] # gets rid of first column
+diagnosis <-as.factor(wisc.df$diagnosis)  # benign or malignant, save as a factor 
+head(wisc.data)
+
+# now there is no diagnosis column, because we dont want to include that in our analysis
+
+#will compare with it at the end
+```
+Useful functions: table(), grep() -> finds matching patterns 
+
+Q3. How many variables/features (can by called by colnames()) in the data are suffixed with _mean?
+
+
+```{r}
+#colnames(wisc.data)
+length(grep("_mean", colnames(wisc.data), value="T"))
+
+```
+## 2 PCA Principle Component Analysis
+We want to scale our data before PCA by setting the `scale=True` argument.
+```{r}
+wisc.pr <- prcomp(wisc.data, scale=TRUE)
+```
+
+How much variance is captured in each Principle component?
+
+```{r}
+x <-summary(wisc.pr)
+x$importance
+
+# plot variance against PC and look for elbow point
+
+# look here at the summulative proportion numbers
+```
+
+```{r}
+plot(x$importance[2,], typ="b")
+```
+Elbow happens around index 3. 
+```{r}
+biplot(wisc.pr) # useless plot
+```
+```{r}
+attributes(wisc.pr)
+```
+x is what we're after
+
+```{r}
+head(wisc.pr$x)
+```
+These our the coordinates of the patients on the new axis
+main pca plot
+could plot whatever biplot of pcx vs pcy that you want
+
+My main PC result figure (cordination plot)
+```{r}
+plot(wisc.pr$x, col=diagnosis) # will plot pc1 vs pc2, first two columns
+# colour red for malignant, bengin for black 
+```
+Still dont understand PC - > what is PC1? made up of many factors 
+the point is to reduce the dimensionality of the data, to figure out which key factors make up PC1 ie explain most of the variation
+
+Each point represents a patient. 
+
+
+Points with little influence are closer to 0.
+
+
+```{r}
+# create a data frame to plot 
+
+df <- as.data.frame(wisc.pr$x) # just the x column 
+df$diagnosis <- diagnosis
+
+library(ggplot2)
+
+# Make a scatter plot and colour by diagnosis 
+
+# just want coordinates a diagnosis so thats why we are creating our own new data frame. 
+
+ggplot(df)+
+  aes(PC1, PC2, col=diagnosis)+
+  geom_point()
+
+
+```
+
+```{r}
+head(df)
+```
+
+## Varience explained
+
+```{r}
+# calculate the varience of each principle component
+
+pr.var <- wisc.pr$sdev^2 # what is wisc.pr again? a table of the PC's and their standard deviations
+head(pr.var)
+
+```
+Now we will calculate the varience explained by each PC by dividing by the total variance explained by all PCs
+
+```{r}
+pve <- (pr.var )/(sum(pr.var ))
+pve
+```
+
+```{r}
+# now plot the varience explained by each pc: pve
+plot(pve, xlab="Principle Component", ylab = "Proportion of Variance Explained", ylim = c(0,1), type = "o")
+
+```
+
+```{r}
+# Alternative scree plot of the same data, note data driven y-axis
+barplot(pve, ylab = "Precent of Variance Explained",
+     names.arg=paste0("PC",1:length(pve)), las=2, axes = FALSE)
+axis(2, at=pve, labels=round(pve,2)*100 )
+```
+>Q9. For the first principal component, what is the component of the loading vector (i.e. wisc.pr$rotation[,1]) for the feature concave.points_mean? This tells us how much this original feature contributes to the first PC.
+
+```{r}
+wisc.pr$rotation[,1]["concave.points_mean"]
+
+```
+
+## Hierarchical Clustering
+
+We are going to do hierarchical clustering of the original data
+This kind of analysis doesnt require us to know how many cluster there should be in advance - unlike kmeans clustering. 
+
+First scale the wisc.data data and assign the result to data.scaled
+```{r}
+head(wisc.data)
+```
+Try to cluster the wisc.data
+```{r}
+km <- kmeans(wisc.data, centers = 2)
+table(km$cluster)
+
+```
+In other words use my PCA results as a basis of clustering. PCA is giving some signal. now we will cluster based on that signal
+
+```{r}
+d <- dist(wisc.pr$x[,1:3])
+hc <- hclust(d, method="ward.D2")
+plot(hc)
+#use these moved variables , pc1, pc2, pc3  as input to cluster rather than the original data since they are better than the original variables at revealing the contributing factors 
+```
+Cut this tree to yeild s groups/clusters
+
+```{r}
+grps <- cutree(hc, k=2)
+table(grps)
+```
+Compare to my expert M and B diagnosis
+```{r}
+table(diagnosis)
+```
+Cross table 
+```{r}
+table(diagnosis, grps)
+```
+179+33 = 212 and the vast majority are cluster 1
+this table shows how the clustering and expert diagnosis correspond. 
+
+Getting 179 correct, and 33 not correct - figuring out the false positives
+ideally want to get all M's into cluster 1 so you are 100% good at catching all M's
+
+Trade-off between sensitivity and specificity. 
+
+do up to Q12
+
+## 3 Hierarchical Clustering
+First scale the wisc.data
+
+```{r}
+data.scaled <- scale(wisc.data)
+
+# now calculate the distance between all pairs in the scaled version
+data.dist <- dist(data.scaled, method = "euclidean")
+
+# create a hierarchical clustering model
+
+wisc.hclust <- hclust(data.dist)
+
+```
+
+## Results of hierarchical clustering 
+
+>10 What is the height at which the clustering model has 4 clusters
+
+```{r}
+plot(wisc.hclust)
+abline(19, 0, col="red", lty=2)
+```
+It happens at height 19
+
+## Using different methods
+As we discussed in our last class videos there are number of different “methods” we can use to combine points during the hierarchical clustering procedure. These include "single", "complete", "average" and (my favorite) "ward.D2"
+>Q12 Which method gives your favorite results for the same data.dist dataset? Explain your reasoning.
+
+"Complete" and "ward.D2" are my favourites because they produce the trees that are the easiest to read. 
+
+```{r}
+wisc.hclust <- hclust(data.dist, method="ward.D2")
+plot(wisc.hclust)
+
+```
+```{r}
+wisc.hclust <- hclust(data.dist, method="average")
+plot(wisc.hclust)
+
+```
+
+```{r}
+wisc.hclust <- hclust(data.dist, method="complete")
+plot(wisc.hclust)
+
+```
+```{r}
+wisc.hclust <- hclust(data.dist, method="single")
+plot(wisc.hclust)
+
+```
+
+stop at 
+## 4 combining methods
+
