@@ -1,5 +1,5 @@
 # BGGN213
-My class work from BGGN213 at UC San Diego. 
+My class work from [BGGN213](https://bioboot.github.io/bggn213_F24/schedule/) at UC San Diego. 
 
 
 
