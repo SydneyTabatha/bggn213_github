@@ -1,0 +1,106 @@
+---
+title: "LAB 6 // Sydney Ackermann // PID: A69036053"
+format: gfm
+editor: visual
+
+---
+
+```{r}
+add <- function(x,y) {
+  x+y
+}
+add(1,1)
+
+add(c(1,2,3), 1)
+```
+
+```{r}
+add2 <- function(x,y=1) {
+  # defualt value
+  x+y
+}
+
+add2(2,)
+```
+
+Make a function called 'generate_dna()' that makes random nucleotide sequences of any length
+
+```{r}
+#generate_dna <- function() {
+  
+  #Generate a nucleotide sequence   out of the 4 DNA bases.
+  
+  bases <- c("A", "C", "G", "T")
+  
+  sequence <- sample(bases, size=100, replace=TRUE)
+  
+#}
+
+```
+
+# make code snipet into a function
+
+```{r}
+generate_dna <- function(length) {
+  #Generate a nucleotide sequence   out of the 4 DNA bases.
+  bases <- c("A", "C", "G", "T")
+  sequence <- sample(bases, size=length, replace=TRUE)
+  return(sequence) 
+}
+
+```
+
+```{r}
+generate_dna(10)
+
+```
+
+```{r}
+aa <- unique(bio3d::aa.table$aa1)[1:12] # :: this means to install just the tables part of the  package
+```
+
+```{r}
+bio3d::aa.table
+```
+
+```{r}
+library(bio3d)
+
+aa.table
+```
+
+```{r}
+generate_protein_seq <- function(length) {
+  aa <- unique(bio3d::aa.table$aa1)[1:12] # list of unique amino acids
+  sequence <- sample(aa, size=length, replace=TRUE)
+  sequence <- paste(sequence, collapse = "")
+  return(sequence) 
+}
+```
+
+```{r}
+ 
+generate_protein_seq(6)
+generate_protein_seq(7)
+
+generate_protein_seq(12)
+generate_protein_seq(13)
+```
+
+Generate sequences of proteins 6 through 13
+
+```{r}
+answer <- sapply(6:12, generate_protein_seq) 
+answer
+```
+
+Format above as FASTA
+
+```{r}
+# > at the start of every FASTA sequence
+#cat(paste(">id.",  6:12,"\n", answer, sep="", "\n")) # concatinate
+cat(paste(">id.",  6:12,"\n", answer, sep=""), sep="\n")
+```
+
+Antigen sequences need to be very long to be unique such that the probability of a match by chance is incredible low.
+
