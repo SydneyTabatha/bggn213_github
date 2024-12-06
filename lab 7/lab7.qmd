@@ -1,6 +1,6 @@
 ---
 title: "lab 7 Sydney Ackermann PID: A69036053"
-format: pdf
+format: gfm
 editor: visual
 ---
 
