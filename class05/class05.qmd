@@ -1,7 +1,7 @@
 ---
 title: "Class 5: Data viz with"
 author: "Sydney (PID: A69036053)"
-format: pdf
+format: gfm
 ---
 # html#change to pdf, save, render
 
